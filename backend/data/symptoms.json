@@ -1,0 +1,79 @@
+[
+    {
+        "symptom": "fever",
+        "specialization": "General Physician",
+        "common_medicines": [
+            "Paracetamol",
+            "Ibuprofen"
+        ],
+        "emergency": false
+    },
+    {
+        "symptom": "headache",
+        "specialization": "General Physician / Neurologist",
+        "common_medicines": [
+            "Paracetamol",
+            "Aspirin"
+        ],
+        "emergency": false
+    },
+    {
+        "symptom": "cough",
+        "specialization": "General Physician / Pulmonologist",
+        "common_medicines": [
+            "Cough Syrup",
+            "Lozenges"
+        ],
+        "emergency": false
+    },
+    {
+        "symptom": "chest pain",
+        "specialization": "Cardiologist",
+        "common_medicines": [
+            "Aspirin (Emergency only - consult doctor)"
+        ],
+        "emergency": true
+    },
+    {
+        "symptom": "breathing difficulty",
+        "specialization": "Pulmonologist / Emergency",
+        "common_medicines": [
+            "Inhaler (if prescribed)"
+        ],
+        "emergency": true
+    },
+    {
+        "symptom": "skin rash",
+        "specialization": "Dermatologist",
+        "common_medicines": [
+            "Antihistamines",
+            "Calamine Lotion"
+        ],
+        "emergency": false
+    },
+    {
+        "symptom": "stomach ache",
+        "specialization": "Gastroenterologist",
+        "common_medicines": [
+            "Antacids"
+        ],
+        "emergency": false
+    },
+    {
+        "symptom": "joint pain",
+        "specialization": "Orthopedist",
+        "common_medicines": [
+            "Pain Relievers",
+            "Ointments"
+        ],
+        "emergency": false
+    },
+    {
+        "symptom": "anxiety",
+        "specialization": "Psychiatrist / Therapist",
+        "common_medicines": [
+            "Consult Doctor"
+        ],
+        "emergency": false
+    }
+]
