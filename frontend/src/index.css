@@ -1,0 +1,326 @@
+:root {
+  --primary: #0EA5E9;
+  /* Sky Blue */
+  --primary-dark: #0284C7;
+  --secondary: #64748B;
+  /* Slate */
+  --success: #10B981;
+  /* Emerald */
+  --warning: #F59E0B;
+  /* Amber */
+  --danger: #EF4444;
+  /* Red */
+  --background: #F8FAFC;
+  /* Light Blue/Grey */
+  --surface: #FFFFFF;
+  --text-main: #1E293B;
+  --text-light: #64748B;
+  --border: #E2E8F0;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+}
+
+[data-theme="dark"] {
+  --primary: #38BDF8;
+  --primary-dark: #0EA5E9;
+  --secondary: #94A3B8;
+  --success: #34D399;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --background: #0F172A;
+  --surface: #1E293B;
+  --text-main: #F1F5F9;
+  --text-light: #94A3B8;
+  --border: #334155;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--background);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-outline {
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  background: transparent;
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 2rem;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: var(--text-light);
+}
+
+/* Auth Layout */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Appointment & Calendar Styles */
+.react-calendar {
+  width: 100% !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  font-family: inherit !important;
+  border-radius: var(--radius-md) !important;
+  padding: 1rem !important;
+}
+
+.react-calendar__tile--active {
+  background: var(--primary) !important;
+  border-radius: 5px !important;
+}
+
+.react-calendar__tile--now {
+  background: #E0F2FE !important;
+  border-radius: 5px !important;
+  color: #0369A1 !important;
+}
+
+.react-calendar__navigation button {
+  color: var(--text-main) !important;
+  font-weight: 600 !important;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  color: var(--text-light) !important;
+  text-decoration: none !important;
+}
+
+.appointment-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-scheduled {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.status-completed {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.status-cancelled {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+
+.status-missed {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+/* Glassmorphism & Premium UI Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+[data-theme="dark"] .glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-hover-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Custom Scrollbar for lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 20px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: fadeIn 0.5s ease-out forwards;
+}
