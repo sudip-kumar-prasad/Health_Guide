@@ -14,6 +14,8 @@ import Analytics from './pages/Analytics';
 import FindDoctors from './pages/FindDoctors';
 import HealthMetrics from './pages/HealthMetrics';
 import MedicationTracker from './pages/MedicationTracker';
+import Appointments from './pages/Appointments';
+import BookAppointment from './pages/BookAppointment';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 
@@ -101,10 +103,26 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/appointments"
+                element={
+                  <PrivateRoute>
+                    <Appointments />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/book-appointment"
+                element={
+                  <PrivateRoute>
+                    <BookAppointment />
+                  </PrivateRoute>
+                }
+              />
             </Routes>
           </div>
           <footer style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-light)', borderTop: '1px solid var(--border)' }}>
-            &copy; {new Date().getFullYear()} Health Guidance App. Informational Use Only.
+            &copy; {new Date().getFullYear()} VitallQ. Informational Use Only.
           </footer>
         </div>
         <ToastContainer position="top-right" autoClose={3000} />
