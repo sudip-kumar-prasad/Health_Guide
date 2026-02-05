@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaClock, FaUserMd, FaMapMarkerAlt, FaPhone, FaTrashAlt, FaPlus, FaChevronRight, FaFilter } from 'react-icons/fa';
 import axios from 'axios';
+import { API_URL } from '../config';
 import AuthContext from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -32,7 +33,7 @@ const Appointments = () => {
             };
 
             // Call the backend API
-            const response = await axios.get('http://localhost:5001/api/appointments', axiosConfig);
+            const response = await axios.get(`${API_URL}/api/appointments`, axiosConfig);
             setAppointmentList(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -61,7 +62,7 @@ const Appointments = () => {
             };
 
             // DELETE request to remove or update status in database
-            await axios.delete(`http://localhost:5001/api/appointments/${appointmentId}`, axiosConfig);
+            await axios.delete(`${API_URL}/api/appointments/${appointmentId}`, axiosConfig);
 
             toast.success('Appointment cancelled successfully');
             loadUserAppointments(); // Refresh the list from the server

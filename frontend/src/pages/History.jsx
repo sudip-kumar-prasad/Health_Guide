@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import { format } from 'date-fns';
 import {
     FaTrash,
@@ -26,7 +27,7 @@ const History = () => {
     const fetchHistory = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5001/api/symptoms/history', {
+            const response = await axios.get(`${API_URL}/api/symptoms/history`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setRecords(response.data);
@@ -41,7 +42,7 @@ const History = () => {
         if (window.confirm('Are you sure you want to delete this record?')) {
             try {
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:5001/api/symptoms/${id}`, {
+                await axios.delete(`${API_URL}/api/symptoms/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 toast.success('Record deleted successfully');

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaClock, FaUserMd, FaMapMarkerAlt, FaPhone, FaStar, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
 import axios from 'axios';
+import { API_URL } from '../config';
 import AuthContext from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -131,7 +132,7 @@ const BookAppointment = () => {
             };
 
             // STEP 5: Send POST request to backend
-            const response = await axios.post('http://localhost:5001/api/appointments', finalBookingData, axiosConfig);
+            const response = await axios.post(`${API_URL}/api/appointments`, finalBookingData, axiosConfig);
 
             if (response.status === 201) {
                 setIsBookingSuccess(true);

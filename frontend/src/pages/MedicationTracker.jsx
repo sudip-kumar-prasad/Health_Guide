@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPills, FaPlus, FaTrash, FaCheckCircle, FaClock, FaExclamationCircle, FaToggleOn, FaToggleOff, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { API_URL } from '../config';
 // Removed unused import: format
 
 const MedicationTracker = () => {
@@ -30,7 +31,7 @@ const MedicationTracker = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5001/api/medications', {
+            const response = await axios.get(`${API_URL}/api/medications`, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }
@@ -67,7 +68,7 @@ const MedicationTracker = () => {
             };
 
             // Send to backend
-            await axios.post('http://localhost:5001/api/medications', dataToSend, {
+            await axios.post(`${API_URL}/api/medications`, dataToSend, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }
@@ -101,7 +102,7 @@ const MedicationTracker = () => {
             // Send the opposite of current status
             const newStatus = !currentStatus;
 
-            await axios.put('http://localhost:5001/api/medications/' + id, {
+            await axios.put(`${API_URL}/api/medications/` + id, {
                 isActive: newStatus
             }, {
                 headers: {
@@ -126,7 +127,7 @@ const MedicationTracker = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete('http://localhost:5001/api/medications/' + id, {
+            await axios.delete(`${API_URL}/api/medications/` + id, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }

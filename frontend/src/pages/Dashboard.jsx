@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import AuthContext from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import {
@@ -33,14 +34,14 @@ const Dashboard = () => {
                 const config = { headers: { Authorization: `Bearer ${token}` } };
 
                 const [historyRes, analyticsRes] = await Promise.all([
-                    axios.get('http://localhost:5001/api/symptoms/history', config),
-                    axios.get('http://localhost:5001/api/symptoms/analytics', config)
+                    axios.get(`${API_URL}/api/symptoms/history`, config),
+                    axios.get(`${API_URL}/api/symptoms/analytics`, config)
                 ]);
 
                 setHistory(historyRes.data);
                 setAnalytics(analyticsRes.data);
 
-                const wellnessRes = await axios.get('http://localhost:5001/api/wellness/today', config);
+                const wellnessRes = await axios.get(`${API_URL}/api/wellness/today`, config);
                 if (wellnessRes.data) {
                     setWellnessLog(wellnessRes.data);
                     setMood(wellnessRes.data.mood);
@@ -59,7 +60,7 @@ const Dashboard = () => {
         try {
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const res = await axios.post('http://localhost:5001/api/wellness', {
+            const res = await axios.post(`${API_URL}/api/wellness`, {
                 mood,
                 energyLevel: energy
             }, config);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import {
     BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
@@ -19,7 +20,7 @@ const Analytics = () => {
     const fetchAnalytics = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5001/api/symptoms/analytics', {
+            const response = await axios.get(`${API_URL}/api/symptoms/analytics`, {
                 headers: {
                     Authorization: 'Bearer ' + token
                 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import { Link } from 'react-router-dom';
 import {
     FaStethoscope, FaClock, FaExclamationTriangle, FaUserMd,
@@ -52,7 +53,7 @@ const SymptomCheck = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const symptomsArray = formData.symptoms.split(',').map(s => s.trim());
 
-            const { data } = await axios.post('http://localhost:5001/api/symptoms/analyze', {
+            const { data } = await axios.post(`${API_URL}/api/symptoms/analyze`, {
                 symptoms: symptomsArray,
                 duration: formData.duration,
                 severity: formData.severity

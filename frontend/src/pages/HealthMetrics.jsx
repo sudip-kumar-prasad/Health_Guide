@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { FaWeight, FaHeartbeat, FaTint, FaThermometerHalf, FaCalculator, FaPlus, FaTrash, FaCheckCircle, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -53,7 +54,7 @@ const HealthMetrics = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.get(`http://localhost:5001/api/metrics?type=${type}&limit=30`, {
+            const { data } = await axios.get(`${API_URL}/api/metrics?type=${type}&limit=30`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMetrics(data);
@@ -67,7 +68,7 @@ const HealthMetrics = () => {
     const fetchStats = async (type) => {
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.get(`http://localhost:5001/api/metrics/stats/${type}`, {
+            const { data } = await axios.get(`${API_URL}/api/metrics/stats/${type}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStats(data);
@@ -80,7 +81,7 @@ const HealthMetrics = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.post('http://localhost:5001/api/metrics/bmi', bmiData, {
+            const { data } = await axios.post(`${API_URL}/api/metrics/bmi`, bmiData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setBmiResult(data);
@@ -113,7 +114,7 @@ const HealthMetrics = () => {
             delete metricData.systolic;
             delete metricData.diastolic;
 
-            await axios.post('http://localhost:5001/api/metrics', metricData, {
+            await axios.post(`${API_URL}/api/metrics`, metricData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -132,7 +133,7 @@ const HealthMetrics = () => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5001/api/metrics/${id}`, {
+            await axios.delete(`${API_URL}/api/metrics/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Reading deleted');
