@@ -5,11 +5,14 @@ import AuthContext from '../context/AuthContext';
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError('');
         try {
             await login(formData.email, formData.password);
             navigate('/dashboard');
@@ -17,6 +20,8 @@ const Login = () => {
             // Handle error safely
             const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
             setError(msg);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -51,8 +56,24 @@ const Login = () => {
                             required
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                        Login
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        disabled={loading}
+                    >
+                        {loading && (
+                            <span style={{
+                                border: '2px solid rgba(255,255,255,0.3)',
+                                borderTop: '2px solid white',
+                                borderRadius: '50%',
+                                width: '16px',
+                                height: '16px',
+                                animation: 'spin 0.8s linear infinite',
+                                display: 'inline-block'
+                            }}></span>
+                        )}
+                        {loading ? 'Logging in...' : 'Login'}
                     </button>
                 </form>
                 <p style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--text-light)' }}>
