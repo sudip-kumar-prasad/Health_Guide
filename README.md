@@ -7,20 +7,32 @@ This platform provides informational health guidance only and does not replace p
 A full-stack web application that provides informational health insights based on user-reported symptoms. The system offers general guidance while maintaining strict ethical boundaries and encouraging professional medical consultation.
 
 ## Features
-- 🔐 User authentication (JWT-based)
-- 👤 User profile management
-- 📝 Symptom input & analysis
-- 🏥 Doctor specialization recommendations
-- 💊 General OTC medicine suggestions
-- 🚨 Emergency alert system
-- 📊 Health history dashboard
-- 📄 PDF report generation
+- 🔐 **User Authentication** - Secure JWT-based registration and login
+- 👤 **User Profile Management** - Personalized profile with health information
+- 📝 **Symptom Analysis** - AI-powered symptom checking with detailed health insights
+- 🏥 **Doctor Recommendations** - Specialization suggestions based on symptoms
+- 💊 **Medicine Suggestions** - General OTC medicine recommendations
+- 🚨 **Emergency Alert System** - Automatic detection of critical symptoms
+- 📅 **Appointment Booking** - Schedule and manage healthcare appointments
+- 💪 **Health Metrics Tracking** - Monitor BMI, blood pressure, heart rate, glucose levels
+- 📊 **Health Analytics** - Visual dashboards with trends and insights using charts
+- 💊 **Medication Tracker** - Track medications with dosage and reminder schedules
+- 🗺️ **Find Nearby Doctors** - Geolocation-based search for nearby healthcare facilities using OpenStreetMap
+- 🧘 **Wellness Logging** - Track mood, energy levels, sleep quality, and exercise
+- 📜 **Health History** - Complete record of all symptom checks and analyses
+- 📄 **PDF Report Generation** - Export health reports as PDF documents
 
 ## Tech Stack
-**Frontend:** React, Vite, CSS
-**Backend:** Node.js, Express, JWT Authentication, Mongoose
-**Database:** MongoDB
-**Analysis:** Rule-based symptom matching
+**Frontend:** React 19, Vite 7, React Router, CSS  
+**UI Libraries:** Recharts (charts), React Calendar, React Icons, React Toastify  
+**Backend:** Node.js, Express 5, JWT Authentication, Mongoose  
+**Database:** MongoDB (local or MongoDB Atlas)  
+**File Upload:** Multer  
+**Email:** Nodemailer  
+**Scheduling:** Node-Cron  
+**PDF Generation:** jsPDF with AutoTable  
+**Geolocation:** OpenStreetMap Nominatim API  
+**Analysis:** Rule-based symptom matching with severity detection
 
 ## Safety & Ethics
 - No medical diagnoses provided
@@ -61,12 +73,21 @@ cd frontend
 npm install
 ```
 
-5. Create `.env` file in the backend directory:
+5. Create environment files:
+
+**Backend `.env` file:**
 ```bash
-cd ../backend
+cd backend
 echo "MONGO_URI=mongodb://localhost:27017/health-guidance
 JWT_SECRET=your_jwt_secret_here
-PORT=5000" > .env
+PORT=5000
+NODE_ENV=development" > .env
+```
+
+**Frontend `.env` file:**
+```bash
+cd ../frontend
+echo "VITE_API_URL=http://localhost:5000" > .env
 ```
 
 6. Run the application:
@@ -79,38 +100,85 @@ This will start both frontend (port 5173) and backend (port 5000) servers.
 
 ## Project Structure
 ```
-health-guide/
+Health_Guide/
 ├── frontend/              # React Vite app
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
+│   │   │   └── Navbar.jsx
+│   │   ├── context/       # React context for state management
+│   │   │   └── AuthContext.jsx
 │   │   ├── pages/         # Page components
+│   │   │   ├── Home.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Signup.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   ├── SymptomCheck.jsx
+│   │   │   ├── History.jsx
+│   │   │   ├── Analytics.jsx
+│   │   │   ├── HealthMetrics.jsx
+│   │   │   ├── MedicationTracker.jsx
+│   │   │   ├── Appointments.jsx
+│   │   │   ├── BookAppointment.jsx
+│   │   │   └── FindDoctors.jsx
 │   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   ├── main.jsx
+│   │   └── config.js      # API configuration
 │   ├── public/            # Static assets
+│   ├── .env               # Environment variables
 │   ├── index.html
 │   └── package.json
 ├── backend/               # Node.js Express API
 │   ├── controllers/       # Route handlers
-│   ├── middleware/        # Custom middleware (auth, etc)
+│   │   ├── authController.js
+│   │   ├── symptomController.js
+│   │   ├── metricController.js
+│   │   ├── appointmentController.js
+│   │   ├── medicationController.js
+│   │   └── wellnessController.js
+│   ├── middleware/        # Custom middleware
+│   │   └── authMiddleware.js
 │   ├── models/            # Mongoose schemas
+│   │   ├── User.js
+│   │   ├── SymptomRecord.js
+│   │   ├── HealthMetric.js
+│   │   ├── Appointment.js
+│   │   ├── Medication.js
+│   │   └── WellnessLog.js
 │   ├── routes/            # API routes
+│   │   ├── authRoutes.js
+│   │   ├── symptomRoutes.js
+│   │   ├── metricRoutes.js
+│   │   ├── appointmentRoutes.js
+│   │   ├── medicationRoutes.js
+│   │   └── wellnessRoutes.js
 │   ├── utils/             # Utility functions
-│   ├── data/              # Static data
+│   ├── data/              # Static data (symptoms, conditions)
+│   ├── .env               # Environment variables
 │   ├── index.js           # Server entry point
 │   └── package.json
 ├── package.json           # Root scripts
+├── vercel.json            # Vercel deployment config
 ├── .gitignore
 └── README.md
 ```
 
 ## Environment Variables
 
-### Backend (.env)
-```
+### Backend (`.env` in backend directory)
+```env
 MONGO_URI=mongodb://localhost:27017/health-guidance
-JWT_SECRET=your_secure_jwt_secret
+JWT_SECRET=your_secure_jwt_secret_key_here
 PORT=5000
+NODE_ENV=development
 ```
+
+### Frontend (`.env` in frontend directory)
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+For production deployment, update `VITE_API_URL` to your deployed backend URL (e.g., Render, Railway, or Vercel).
 
 ## Scripts
 
@@ -135,13 +203,46 @@ npm run dev      # Start with nodemon (if configured)
 
 ## API Endpoints
 
-- `GET /` — Health check
-- `POST /auth/signup` — User registration
-- `POST /auth/login` — User login
-- `GET /profile` — Get user profile (protected)
-- `PUT /profile` — Update user profile (protected)
-- `GET /api/symptoms` — Get all symptoms
-- `POST /api/analyze` — Analyze symptoms
+### Authentication Routes (`/api/auth`)
+- `POST /api/auth/signup` — User registration
+- `POST /api/auth/login` — User login
+- `GET /api/auth/profile` — Get user profile (protected)
+- `PUT /api/auth/profile` — Update user profile (protected)
+
+### Symptom Routes (`/api/symptoms`)
+- `POST /api/symptoms/analyze` — Analyze symptoms and get health insights
+- `GET /api/symptoms/history` — Get user's symptom check history (protected)
+- `GET /api/symptoms/history/:id` — Get specific symptom record (protected)
+- `DELETE /api/symptoms/history/:id` — Delete symptom record (protected)
+
+### Health Metrics Routes (`/api/metrics`)
+- `POST /api/metrics` — Add new health metric (protected)
+- `GET /api/metrics` — Get all user's health metrics (protected)
+- `GET /api/metrics/:id` — Get specific metric (protected)
+- `PUT /api/metrics/:id` — Update metric (protected)
+- `DELETE /api/metrics/:id` — Delete metric (protected)
+
+### Appointment Routes (`/api/appointments`)
+- `POST /api/appointments` — Book new appointment (protected)
+- `GET /api/appointments` — Get all user's appointments (protected)
+- `GET /api/appointments/:id` — Get specific appointment (protected)
+- `PUT /api/appointments/:id` — Update appointment (protected)
+- `DELETE /api/appointments/:id` — Cancel appointment (protected)
+
+### Medication Routes (`/api/medications`)
+- `POST /api/medications` — Add new medication (protected)
+- `GET /api/medications` — Get all user's medications (protected)
+- `GET /api/medications/:id` — Get specific medication (protected)
+- `PUT /api/medications/:id` — Update medication (protected)
+- `DELETE /api/medications/:id` — Delete medication (protected)
+
+### Wellness Routes (`/api/wellness`)
+- `POST /api/wellness` — Add wellness log entry (protected)
+- `GET /api/wellness` — Get all user's wellness logs (protected)
+- `GET /api/wellness/:id` — Get specific wellness log (protected)
+- `DELETE /api/wellness/:id` — Delete wellness log (protected)
+
+**Note:** Routes marked with (protected) require JWT authentication via Authorization header.
 
 ## Database Setup
 
