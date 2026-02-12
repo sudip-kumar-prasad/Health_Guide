@@ -149,7 +149,7 @@ const Navbar = () => {
                     ) : (
                         <>
                             <Link to="/login" style={linkStyle}>Login</Link>
-                            <Link to="/signup" style={{ ...linkStyle, color: 'var(--primary)' }}>Sign Up</Link>
+                            <Link to="/signup" style={{ ...linkStyle, color: 'var(--primary)' }}>Get Started</Link>
                         </>
                     )}
                 </div>

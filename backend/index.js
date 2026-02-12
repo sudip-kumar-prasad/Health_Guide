@@ -51,3 +51,4 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/health-guid
 
 // Start Server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Force restart for schema update

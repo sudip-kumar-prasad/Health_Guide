@@ -14,7 +14,8 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password, age, gender } = req.body;
+    // Register User
+    const { name, email, password, age, gender, phone } = req.body;
 
     if (!name || !email || !password) {
         return res.status(400).json({ message: 'Please add all fields' });
@@ -34,7 +35,8 @@ const registerUser = async (req, res) => {
             email,
             password,
             age,
-            gender
+            gender,
+            phone
         });
 
         if (user) {
@@ -42,6 +44,7 @@ const registerUser = async (req, res) => {
                 _id: user.id,
                 name: user.name,
                 email: user.email,
+                phone: user.phone,
                 token: generateToken(user._id),
             });
         }
@@ -60,14 +63,16 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-        // Update last login
-        user.lastLogin = new Date();
-        await user.save();
-
         res.json({
             _id: user.id,
             name: user.name,
             email: user.email,
+            phone: user.phone,
+            age: user.age,
+            gender: user.gender,
+            profileImage: user.profileImage,
+            medicalHistory: user.medicalHistory,
+            emergencyContact: user.emergencyContact,
             token: generateToken(user._id),
         });
     } else {
@@ -93,6 +98,10 @@ const updateProfile = async (req, res) => {
             user.name = req.body.name || user.name;
             user.age = req.body.age !== undefined ? req.body.age : user.age;
             user.gender = req.body.gender || user.gender;
+            // Explicitly check if phone is provided in body to allow clearing it or setting it
+            if (req.body.phone !== undefined) {
+                user.phone = req.body.phone;
+            }
             user.profileImage = req.body.profileImage || user.profileImage;
 
             // Update medical history
@@ -117,6 +126,7 @@ const updateProfile = async (req, res) => {
                 _id: updatedUser._id,
                 name: updatedUser.name,
                 email: updatedUser.email,
+                phone: updatedUser.phone,
                 age: updatedUser.age,
                 gender: updatedUser.gender,
                 profileImage: updatedUser.profileImage,
@@ -128,6 +138,26 @@ const updateProfile = async (req, res) => {
         }
     } catch (error) {
         res.status(400).json({ message: 'Profile update failed', error: error.message });
+    }
+};
+
+// @desc    Update password
+// @route   PUT /api/auth/update-password
+// @access  Private
+const updatePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = await User.findById(req.user._id);
+
+        if (user && (await user.matchPassword(currentPassword))) {
+            user.password = newPassword;
+            await user.save();
+            res.json({ message: 'Password updated successfully' });
+        } else {
+            res.status(401).json({ message: 'Invalid current password' });
+        }
+    } catch (error) {
+        res.status(400).json({ message: 'Password update failed', error: error.message });
     }
 };
 
@@ -212,6 +242,7 @@ module.exports = {
     loginUser,
     getMe,
     updateProfile,
+    updatePassword,
     forgotPassword,
     resetPassword,
 };

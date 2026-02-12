@@ -21,8 +21,69 @@ import {
  * health stats, and account security.
  */
 const Profile = () => {
-    const { user, logout } = useContext(AuthContext);
+    const { user, logout, updateUserProfile, changePassword } = useContext(AuthContext);
     const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        phone: ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    // Password Change State
+    const [showPasswordChange, setShowPasswordChange] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
+    const [passwordLoading, setPasswordLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name || '',
+                phone: user.phone || ''
+            });
+        }
+    }, [user]);
+
+    const handleSave = async () => {
+        setLoading(true);
+        try {
+            await updateUserProfile(formData);
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Failed to update profile', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setPasswordMessage({ type: '', text: '' });
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordMessage({ type: 'error', text: 'New passwords do not match' });
+            return;
+        }
+
+        setPasswordLoading(true);
+        try {
+            await changePassword({
+                currentPassword: passwordData.currentPassword,
+                newPassword: passwordData.newPassword
+            });
+            setPasswordMessage({ type: 'success', text: 'Password updated successfully' });
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setTimeout(() => setShowPasswordChange(false), 2000);
+        } catch (error) {
+            setPasswordMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update password' });
+        } finally {
+            setPasswordLoading(false);
+        }
+    };
 
     // Mock stats for visual flair
     const stats = [
@@ -124,7 +185,14 @@ const Profile = () => {
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <button
-                            onClick={() => setIsEditing(!isEditing)}
+                            onClick={() => {
+                                if (isEditing) {
+                                    handleSave();
+                                } else {
+                                    setIsEditing(true);
+                                }
+                            }}
+                            disabled={loading}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -134,12 +202,13 @@ const Profile = () => {
                                 padding: '0.75rem 1.5rem',
                                 borderRadius: '12px',
                                 fontWeight: '700',
-                                transition: 'all 0.2s'
+                                transition: 'all 0.2s',
+                                opacity: loading ? 0.7 : 1
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                            onMouseOver={(e) => !loading && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                            onMouseOut={(e) => !loading && (e.currentTarget.style.transform = 'translateY(0)')}
                         >
-                            <FaEdit /> {isEditing ? 'Save Changes' : 'Edit Profile'}
+                            <FaEdit /> {loading ? 'Saving...' : (isEditing ? 'Save Changes' : 'Edit Profile')}
                         </button>
                         <button
                             onClick={logout}
@@ -208,7 +277,8 @@ const Profile = () => {
                             <input
                                 type="text"
                                 className="form-input"
-                                defaultValue={user.name}
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 readOnly={!isEditing}
                                 style={{ background: isEditing ? 'white' : '#f8fafc' }}
                             />
@@ -234,7 +304,8 @@ const Profile = () => {
                                 <input
                                     type="tel"
                                     className="form-input"
-                                    defaultValue="+1 (555) 000-0000"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     readOnly={!isEditing}
                                     style={{ background: isEditing ? 'white' : '#f8fafc' }}
                                 />
@@ -243,9 +314,87 @@ const Profile = () => {
 
                         <div className="form-group" style={{ marginTop: '1rem' }}>
                             <h4 style={{ fontSize: '1rem', color: '#475569', marginBottom: '1rem' }}>Account Security</h4>
-                            <button className="btn btn-outline" style={{ display: 'flex', gap: '0.5rem', width: 'fit-content' }}>
+                            <button
+                                className="btn btn-outline"
+                                style={{ display: 'flex', gap: '0.5rem', width: 'fit-content' }}
+                                onClick={() => setShowPasswordChange(!showPasswordChange)}
+                            >
                                 <FaLock /> Change Password
                             </button>
+
+                            {showPasswordChange && (
+                                <form onSubmit={handlePasswordChange} style={{ marginTop: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '12px' }}>
+                                    {passwordMessage.text && (
+                                        <div style={{
+                                            padding: '0.75rem',
+                                            borderRadius: '8px',
+                                            marginBottom: '1rem',
+                                            background: passwordMessage.type === 'error' ? '#fee2e2' : '#dcfce7',
+                                            color: passwordMessage.type === 'error' ? '#991b1b' : '#166534',
+                                            fontSize: '0.9rem'
+                                        }}>
+                                            {passwordMessage.text}
+                                        </div>
+                                    )}
+                                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                                        <label className="form-label" style={{ fontSize: '0.9rem' }}>Current Password</label>
+                                        <input
+                                            type="password"
+                                            className="form-input"
+                                            value={passwordData.currentPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                            required
+                                            style={{ background: 'white' }}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                                        <label className="form-label" style={{ fontSize: '0.9rem' }}>New Password</label>
+                                        <input
+                                            type="password"
+                                            className="form-input"
+                                            value={passwordData.newPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                            required
+                                            style={{ background: 'white' }}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                        <label className="form-label" style={{ fontSize: '0.9rem' }}>Confirm New Password</label>
+                                        <input
+                                            type="password"
+                                            className="form-input"
+                                            value={passwordData.confirmPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                            required
+                                            style={{ background: 'white' }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary"
+                                            style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                                            disabled={passwordLoading}
+                                        >
+                                            {passwordLoading ? 'Updating...' : 'Update Password'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPasswordChange(false)}
+                                            style={{
+                                                padding: '0.5rem 1rem',
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: '#64748b',
+                                                cursor: 'pointer',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -47,8 +47,33 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const updateUserProfile = async (userData) => {
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        };
+        const { data } = await axios.put(`${API_URL}/api/auth/profile`, userData, config);
+        // Only update local user state if it's a profile update, not just a password change
+        // But for profile update it returns new user data
+        setUser(data);
+        return data;
+    };
+
+    const changePassword = async (passwordData) => {
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        };
+        const { data } = await axios.put(`${API_URL}/api/auth/update-password`, passwordData, config);
+        return data;
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, updateUserProfile, changePassword, loading }}>
             {children}
         </AuthContext.Provider>
     );
