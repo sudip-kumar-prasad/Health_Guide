@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import { Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import {
     FaUser,
@@ -143,24 +144,7 @@ const Profile = () => {
                     }}>
                         {user.name ? user.name.charAt(0).toUpperCase() : <FaUser />}
                     </div>
-                    <button style={{
-                        position: 'absolute',
-                        bottom: '5px',
-                        right: '5px',
-                        background: 'white',
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        border: '1px solid #e2e8f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        color: '#1e3a8a',
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-                    }}>
-                        <FaCamera size={14} />
-                    </button>
+
                 </div>
 
                 {/* User Intro */}
@@ -401,48 +385,26 @@ const Profile = () => {
 
                 {/* Profile Completion / Activity */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div className="card glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                        <h4 style={{ margin: '0 0 1rem 0', color: '#1e3a8a' }}>Profile Strength</h4>
-                        <div style={{
-                            width: '100px',
-                            height: '100px',
-                            borderRadius: '50%',
-                            border: '8px solid #f1f5f9',
-                            borderTop: '8px solid #10b981',
-                            margin: '0 auto 1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.5rem',
-                            fontWeight: '800',
-                            color: '#10b981'
-                        }}>
-                            85%
-                        </div>
-                        <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Complete your medical history to reach 100%.</p>
-                        <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.9rem', marginTop: '1rem' }}>
-                            Complete Now
-                        </button>
-                    </div>
+
 
                     <div className="card" style={{ padding: '1.5rem' }}>
                         <h4 style={{ margin: '0 0 1.2rem 0', color: '#1e3a8a', fontSize: '1rem' }}>Quick Actions</h4>
                         <div style={{ display: 'grid', gap: '0.8rem' }}>
-                            {['My Health History', 'Download Data', 'Privacy Settings'].map((action, i) => (
-                                <button key={i} style={{
-                                    textAlign: 'left',
-                                    padding: '0.8rem',
-                                    borderRadius: '8px',
-                                    background: '#f8fafc',
-                                    border: '1px solid #e2e8f0',
-                                    fontSize: '0.9rem',
-                                    color: '#475569',
-                                    fontWeight: '500',
-                                    cursor: 'pointer'
-                                }}>
-                                    {action}
-                                </button>
-                            ))}
+                            <Link to="/history" style={{
+                                textAlign: 'left',
+                                padding: '0.8rem',
+                                borderRadius: '8px',
+                                background: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                fontSize: '0.9rem',
+                                color: '#475569',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                textDecoration: 'none',
+                                display: 'block'
+                            }}>
+                                My Health History
+                            </Link>
                         </div>
                     </div>
                 </div>
