@@ -17,7 +17,14 @@ const UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: function () {
+            return !this.googleId;
+        }
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
     },
     age: {
         type: Number,
@@ -78,7 +85,7 @@ const UserSchema = new mongoose.Schema({
 
 // Encrypt password before saving
 UserSchema.pre('save', async function () {
-    if (!this.isModified('password')) {
+    if (!this.password || !this.isModified('password')) {
         return;
     }
     const salt = await bcrypt.genSalt(10);
@@ -87,6 +94,7 @@ UserSchema.pre('save', async function () {
 
 // Match user entered password to hashed password in database
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+    if (!this.password) return false;
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

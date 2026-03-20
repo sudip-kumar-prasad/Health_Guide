@@ -2,6 +2,8 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT
 const generateToken = (id) => {
@@ -237,6 +239,57 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// @desc    Google Login
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res) => {
+    const { idToken } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const { name, email, sub, picture } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (user) {
+            // If user exists but doesn't have googleId, add it
+            if (!user.googleId) {
+                user.googleId = sub;
+                if (!user.profileImage) user.profileImage = picture;
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = await User.create({
+                name,
+                email,
+                googleId: sub,
+                profileImage: picture,
+            });
+        }
+
+        res.json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            age: user.age,
+            gender: user.gender,
+            profileImage: user.profileImage,
+            medicalHistory: user.medicalHistory,
+            emergencyContact: user.emergencyContact,
+            token: generateToken(user._id),
+        });
+    } catch (error) {
+        console.error('Google login error:', error);
+        res.status(400).json({ message: 'Google login failed', error: error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -245,4 +298,5 @@ module.exports = {
     updatePassword,
     forgotPassword,
     resetPassword,
+    googleLogin,
 };

@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -30,8 +31,9 @@ const PrivateRoute = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <Router>
+        <AuthProvider>
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
           <div style={{ flex: 1 }}>
@@ -126,8 +128,9 @@ function App() {
           </footer>
         </div>
         <ToastContainer position="top-right" autoClose={3000} />
-      </AuthProvider>
-    </Router>
+        </AuthProvider>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

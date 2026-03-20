@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 
@@ -8,7 +9,7 @@ const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useContext(AuthContext);
+    const { login, googleLogin } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -22,6 +23,20 @@ const Login = () => {
             // Handle error safely
             const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
             setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setLoading(true);
+        setError('');
+        try {
+            await googleLogin(credentialResponse.credential);
+            navigate('/dashboard');
+        } catch (err) {
+            console.error('Google login error:', err);
+            setError('Google login failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -69,7 +84,7 @@ const Login = () => {
                         <button
                             type="submit"
                             className="btn btn-primary"
-                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}
                             disabled={loading}
                         >
                             {loading && (
@@ -86,6 +101,20 @@ const Login = () => {
                             {loading ? 'Logging in...' : 'Login'}
                         </button>
                     </form>
+
+                    <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-light)' }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                        <span>OR</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => setError('Google Login Failed')}
+                            useOneTap
+                        />
+                    </div>
                     <p style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--text-light)' }}>
                         Don't have an account? <Link to="/signup" style={{ color: 'var(--primary)' }}>Get Started</Link>
                     </p>
