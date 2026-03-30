@@ -1,5 +1,6 @@
 const SymptomRecord = require('../models/SymptomRecord');
 const { analyzeSymptoms } = require('../utils/symptomLogic');
+const { analyzeSymptomsAI } = require('../utils/aiService');
 
 // @desc    Analyze symptoms and save record
 // @route   POST /api/symptoms/analyze
@@ -11,10 +12,17 @@ const analyzeAndSave = async (req, res) => {
         return res.status(400).json({ message: 'Symptoms must be an array' });
     }
 
-    // 1. Run Analysis Logic
-    const analysisResult = analyzeSymptoms(symptoms);
+    let analysisResult;
+    try {
+        // 1. Try AI Analysis Logic (Groq)
+        analysisResult = await analyzeSymptomsAI(symptoms, duration, severity);
+    } catch (error) {
+        console.warn('AI Analysis failed, falling back to static logic:', error.message);
+        // 2. Fallback to Static Logic
+        analysisResult = analyzeSymptoms(symptoms);
+    }
 
-    // 2. Save to Database
+    // 3. Save to Database
     try {
         const record = await SymptomRecord.create({
             user: req.user.id,
