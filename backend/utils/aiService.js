@@ -69,4 +69,32 @@ const analyzeSymptomsAI = async (symptoms, duration, severity) => {
     }
 };
 
-module.exports = { analyzeSymptomsAI };
+/**
+ * AI-powered general health chat using Groq (Llama-3)
+ * @param {Array} messages - Array of message objects {role, content}
+ * @returns {String} AI response content
+ */
+const chatWithAI = async (messages) => {
+    try {
+        const chatCompletion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a professional medical and wellness assistant. Provide helpful, accurate, and empathetic advice. Always include a disclaimer that you are an AI and not a substitute for professional medical advice, especially for serious concerns."
+                },
+                ...messages
+            ],
+            model: "llama-3.3-70b-versatile",
+            temperature: 0.7,
+            max_tokens: 1024,
+        });
+
+        return chatCompletion.choices[0].message.content;
+
+    } catch (error) {
+        console.error('Groq AI Chat Error:', error);
+        throw new Error('Failed to communicate with AI assistant');
+    }
+};
+
+module.exports = { analyzeSymptomsAI, chatWithAI };

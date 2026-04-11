@@ -17,6 +17,7 @@ import HealthMetrics from './pages/HealthMetrics';
 import MedicationTracker from './pages/MedicationTracker';
 import Appointments from './pages/Appointments';
 import BookAppointment from './pages/BookAppointment';
+import AIChat from './pages/AIChat';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 
@@ -118,6 +119,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <BookAppointment />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/ai-assistant"
+                element={
+                  <PrivateRoute>
+                    <AIChat />
                   </PrivateRoute>
                 }
               />

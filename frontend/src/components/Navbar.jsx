@@ -105,8 +105,9 @@ const Navbar = () => {
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     {user ? (
                         <>
-                            <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
-                            <Link to="/check-symptoms" style={linkStyle}>Check Symptoms</Link>
+                             <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
+                             <Link to="/ai-assistant" style={linkStyle}>Health Assistant</Link>
+                             <Link to="/check-symptoms" style={linkStyle}>Check Symptoms</Link>
                             <Link to="/find-doctors" style={linkStyle}>Find Doctors</Link>
                             <Link to="/profile" style={linkStyle}>Profile</Link>
 

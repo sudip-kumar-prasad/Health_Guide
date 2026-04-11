@@ -40,6 +40,7 @@ app.use('/api/metrics', require('./routes/metricRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/medications', require('./routes/medicationRoutes'));
 app.use('/api/wellness', require('./routes/wellnessRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 app.get('/', (req, res) => {
     res.send('Health Guidance API is running...');
