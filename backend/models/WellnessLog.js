@@ -26,4 +26,7 @@ const WellnessLogSchema = new mongoose.Schema({
     }
 });
 
+// Index for faster queries
+WellnessLogSchema.index({ user: 1, createdAt: -1 });
+
 module.exports = mongoose.model('WellnessLog', WellnessLogSchema);

@@ -34,4 +34,7 @@ const SymptomRecordSchema = new mongoose.Schema({
     }
 });
 
+// Add index for faster history retrieval
+SymptomRecordSchema.index({ user: 1, createdAt: -1 });
+
 module.exports = mongoose.model('SymptomRecord', SymptomRecordSchema);

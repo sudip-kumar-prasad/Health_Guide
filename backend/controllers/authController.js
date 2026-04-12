@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -11,6 +11,18 @@ const generateToken = (id) => {
         expiresIn: '30d',
     });
 };
+
+// Helper for lean user data to improve payload speed
+const toLeanUser = (user, token) => ({
+    _id: user._id || user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    age: user.age,
+    gender: user.gender,
+    profileImage: user.profileImage,
+    token: token || undefined
+});
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -42,13 +54,7 @@ const registerUser = async (req, res) => {
         });
 
         if (user) {
-            res.status(201).json({
-                _id: user.id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                token: generateToken(user._id),
-            });
+            res.status(201).json(toLeanUser(user, generateToken(user._id)));
         }
     } catch (error) {
         res.status(400).json({ message: 'Invalid user data', error: error.message });
@@ -65,18 +71,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-        res.json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            age: user.age,
-            gender: user.gender,
-            profileImage: user.profileImage,
-            medicalHistory: user.medicalHistory,
-            emergencyContact: user.emergencyContact,
-            token: generateToken(user._id),
-        });
+        res.json(toLeanUser(user, generateToken(user._id)));
     } else {
         res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -86,7 +81,7 @@ const loginUser = async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = async (req, res) => {
-    res.status(200).json(req.user);
+    res.status(200).json(toLeanUser(req.user));
 };
 
 // @desc    Update user profile
@@ -253,37 +248,28 @@ const googleLogin = async (req, res) => {
 
         const { name, email, sub, picture } = ticket.getPayload();
 
-        let user = await User.findOne({ email });
+        // Atomic operation: find and update or create in one DB round trip
+        const user = await User.findOneAndUpdate(
+            { email },
+            {
+                $set: { googleId: sub },
+                $setOnInsert: {
+                    name,
+                    email,
+                    profileImage: picture,
+                    role: 'user'
+                }
+            },
+            { upsert: true, new: true, runValidators: false }
+        );
 
-        if (user) {
-            // If user exists but doesn't have googleId, add it
-            if (!user.googleId) {
-                user.googleId = sub;
-                if (!user.profileImage) user.profileImage = picture;
-                await user.save();
-            }
-        } else {
-            // Create new user
-            user = await User.create({
-                name,
-                email,
-                googleId: sub,
-                profileImage: picture,
-            });
+        // Update profile image if missing on existing user
+        if (!user.profileImage && picture) {
+            user.profileImage = picture;
+            await user.save();
         }
 
-        res.json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            age: user.age,
-            gender: user.gender,
-            profileImage: user.profileImage,
-            medicalHistory: user.medicalHistory,
-            emergencyContact: user.emergencyContact,
-            token: generateToken(user._id),
-        });
+        res.json(toLeanUser(user, generateToken(user._id)));
     } catch (error) {
         console.error('Google login error:', error);
         res.status(400).json({ message: 'Google login failed', error: error.message });
