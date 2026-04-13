@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
 const mongoose = require('mongoose');
+const { initReminders } = require('./utils/reminderService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -49,7 +50,10 @@ app.get('/', (req, res) => {
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/health-guidance')
-    .then(() => console.log('MongoDB Connected'))
+    .then(() => {
+        console.log('MongoDB Connected');
+        initReminders();
+    })
     .catch(err => console.log(err));
 
 // Start Server

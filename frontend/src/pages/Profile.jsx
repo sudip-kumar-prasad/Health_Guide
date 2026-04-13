@@ -26,7 +26,9 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
-        phone: ''
+        phone: '',
+        medicationReminders: true,
+        appointmentReminders: true
     });
     const [loading, setLoading] = useState(false);
 
@@ -44,7 +46,9 @@ const Profile = () => {
         if (user) {
             setFormData({
                 name: user.name || '',
-                phone: user.phone || ''
+                phone: user.phone || '',
+                medicationReminders: user.notificationPreferences?.medicationReminders ?? true,
+                appointmentReminders: user.notificationPreferences?.appointmentReminders ?? true
             });
         }
     }, [user]);
@@ -52,7 +56,15 @@ const Profile = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            await updateUserProfile(formData);
+            const updateData = {
+                name: formData.name,
+                phone: formData.phone,
+                notificationPreferences: {
+                    medicationReminders: formData.medicationReminders,
+                    appointmentReminders: formData.appointmentReminders
+                }
+            };
+            await updateUserProfile(updateData);
             setIsEditing(false);
         } catch (error) {
             console.error('Failed to update profile', error);
@@ -379,6 +391,55 @@ const Profile = () => {
                                     </div>
                                 </form>
                             )}
+                        </div>
+
+                        <div className="form-group" style={{ marginTop: '2rem' }}>
+                            <h4 style={{ fontSize: '1rem', color: '#475569', marginBottom: '1.2rem', fontWeight: '700' }}>Notification Settings</h4>
+                            <div style={{ display: 'grid', gap: '1rem' }}>
+                                <label style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'space-between',
+                                    padding: '1rem',
+                                    background: '#f8fafc',
+                                    borderRadius: '12px',
+                                    cursor: isEditing ? 'pointer' : 'default'
+                                }}>
+                                    <div>
+                                        <div style={{ fontWeight: '600', color: '#1e293b' }}>Medication Reminders</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Get email alerts for your daily doses</div>
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={formData.medicationReminders}
+                                        onChange={(e) => setFormData({ ...formData, medicationReminders: e.target.checked })}
+                                        disabled={!isEditing}
+                                        style={{ width: '20px', height: '20px', cursor: isEditing ? 'pointer' : 'default' }}
+                                    />
+                                </label>
+
+                                <label style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'space-between',
+                                    padding: '1rem',
+                                    background: '#f8fafc',
+                                    borderRadius: '12px',
+                                    cursor: isEditing ? 'pointer' : 'default'
+                                }}>
+                                    <div>
+                                        <div style={{ fontWeight: '600', color: '#1e293b' }}>Appointment Alerts</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Get reminders 24 hours before appointments</div>
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={formData.appointmentReminders}
+                                        onChange={(e) => setFormData({ ...formData, appointmentReminders: e.target.checked })}
+                                        disabled={!isEditing}
+                                        style={{ width: '20px', height: '20px', cursor: isEditing ? 'pointer' : 'default' }}
+                                    />
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>

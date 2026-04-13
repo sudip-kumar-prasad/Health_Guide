@@ -77,6 +77,20 @@ const UserSchema = new mongoose.Schema({
     // Password Reset
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    notificationPreferences: {
+        medicationReminders: {
+            type: Boolean,
+            default: true
+        },
+        appointmentReminders: {
+            type: Boolean,
+            default: true
+        }
+    },
+    timezone: {
+        type: String,
+        default: 'UTC'
+    },
     createdAt: {
         type: Date,
         default: Date.now
