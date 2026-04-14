@@ -18,13 +18,27 @@ const MedicationTracker = () => {
         frequency: 'Daily',
         instructions: '',
         stockLeft: '',
-        refillReminder: false
+        refillReminder: false,
+        timeOfDay: []
     });
+
+    const [tempTime, setTempTime] = useState('');
 
     // Load medications when the page opens
     useEffect(() => {
         fetchMedications();
     }, []);
+
+    const addTimeToMed = () => {
+        if (tempTime && !newMed.timeOfDay.includes(tempTime)) {
+            setNewMed({ ...newMed, timeOfDay: [...newMed.timeOfDay, tempTime].sort() });
+            setTempTime('');
+        }
+    };
+
+    const removeTime = (time) => {
+        setNewMed({ ...newMed, timeOfDay: newMed.timeOfDay.filter(t => t !== time) });
+    };
 
     // Function to get data from server
     const fetchMedications = async () => {
@@ -49,6 +63,11 @@ const MedicationTracker = () => {
     const handleAddMedication = async (e) => {
         e.preventDefault(); // Stop page reload
 
+        if (newMed.timeOfDay.length === 0 && newMed.frequency !== 'As needed') {
+            toast.warn('Please add at least one time for reminders');
+            return;
+        }
+
         try {
             const token = localStorage.getItem('token');
 
@@ -64,7 +83,8 @@ const MedicationTracker = () => {
                 frequency: newMed.frequency,
                 instructions: newMed.instructions,
                 stockLeft: stockValue,
-                refillReminder: newMed.refillReminder
+                refillReminder: newMed.refillReminder,
+                timeOfDay: newMed.timeOfDay
             };
 
             // Send to backend
@@ -84,7 +104,8 @@ const MedicationTracker = () => {
                 frequency: 'Daily',
                 instructions: '',
                 stockLeft: '',
-                refillReminder: false
+                refillReminder: false,
+                timeOfDay: []
             });
 
             // Refresh list
@@ -259,6 +280,47 @@ const MedicationTracker = () => {
                                     style={{ borderRadius: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.5)' }}
                                 />
                             </div>
+                            
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label" style={{ marginLeft: '0.5rem' }}>Set Reminder Times</label>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <input
+                                        type="time"
+                                        className="form-input"
+                                        value={tempTime}
+                                        onChange={(e) => setTempTime(e.target.value)}
+                                        style={{ borderRadius: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.5)', flex: 1 }}
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={addTimeToMed}
+                                        className="btn btn-primary"
+                                        style={{ borderRadius: '1rem', padding: '0 1.5rem' }}
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+                                    {newMed.timeOfDay.map(time => (
+                                        <span key={time} style={{ 
+                                            background: 'var(--primary)', 
+                                            color: 'white', 
+                                            padding: '0.4rem 0.8rem', 
+                                            borderRadius: '2rem',
+                                            fontSize: '0.85rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.4rem'
+                                        }}>
+                                            {time}
+                                            <FaTimes 
+                                                style={{ cursor: 'pointer', fontSize: '0.7rem' }} 
+                                                onClick={() => removeTime(time)}
+                                            />
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="form-group">
@@ -411,6 +473,11 @@ const MedicationTracker = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.02)', padding: '1rem', borderRadius: '1rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-main)' }}>
                                     <FaClock style={{ color: 'var(--text-light)' }} /> {med.frequency}
+                                    {med.timeOfDay && med.timeOfDay.length > 0 && (
+                                        <span style={{ color: 'var(--primary)', fontWeight: '600' }}>
+                                            ({med.timeOfDay.join(', ')})
+                                        </span>
+                                    )}
                                 </div>
                                 {med.instructions && (
                                     <div style={{ display: 'flex', alignItems: 'start', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-light)' }}>
