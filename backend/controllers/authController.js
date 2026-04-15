@@ -24,6 +24,8 @@ const toLeanUser = (user, token) => ({
     token: token || undefined
 });
 
+const { sendVerificationEmail } = require('../utils/emailService');
+
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -42,6 +44,9 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     // Create user
     try {
         const user = await User.create({
@@ -50,11 +55,17 @@ const registerUser = async (req, res) => {
             password,
             age,
             gender,
-            phone
+            phone,
+            verificationToken
         });
 
         if (user) {
-            res.status(201).json(toLeanUser(user, generateToken(user._id)));
+            // Send verification email
+            await sendVerificationEmail(user.email, user.name, verificationToken);
+            
+            res.status(201).json({
+                message: 'Registration successful! Please check your email to verify your account.'
+            });
         }
     } catch (error) {
         res.status(400).json({ message: 'Invalid user data', error: error.message });
@@ -71,6 +82,10 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(401).json({ message: 'Please verify your email before logging in.' });
+        }
         res.json(toLeanUser(user, generateToken(user._id)));
     } else {
         res.status(400).json({ message: 'Invalid credentials' });
@@ -276,6 +291,27 @@ const googleLogin = async (req, res) => {
     }
 };
 
+// @desc    Verify email token
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+const verifyEmail = async (req, res) => {
+    try {
+        const user = await User.findOne({ verificationToken: req.params.token });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired verification token' });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        await user.save();
+
+        res.json({ message: 'Email verified successfully! You can now log in.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -285,4 +321,5 @@ module.exports = {
     forgotPassword,
     resetPassword,
     googleLogin,
+    verifyEmail,
 };

@@ -75,7 +75,40 @@ const sendAppointmentReminder = async (userEmail, userName, doctorName, date, sp
     }
 };
 
+/**
+ * Send a verification email
+ */
+const sendVerificationEmail = async (userEmail, userName, token) => {
+    try {
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+        const mailOptions = {
+            from: `"VitallQ Security" <${process.env.EMAIL_USER}>`,
+            to: userEmail,
+            subject: '📧 Verify your email - VitallQ',
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h2 style="color: #1e3a8a;">Welcome to VitallQ!</h2>
+                    <p>Hello ${userName},</p>
+                    <p>Thank you for joining our health community. Please verify your email address to get started:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${verificationUrl}" style="background-color: #1e3a8a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Verify Email Address</a>
+                    </div>
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p style="font-size: 0.9rem; color: #64748b;">${verificationUrl}</p>
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                    <p style="font-size: 0.8rem; color: #64748b;">If you didn't create an account, you can safely ignore this email.</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+    }
+};
+
 module.exports = {
     sendMedicationReminder,
-    sendAppointmentReminder
+    sendAppointmentReminder,
+    sendVerificationEmail
 };

@@ -91,6 +91,11 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: 'UTC'
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: String,
     createdAt: {
         type: Date,
         default: Date.now

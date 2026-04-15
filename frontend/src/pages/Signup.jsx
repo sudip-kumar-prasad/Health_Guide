@@ -14,7 +14,7 @@ const Signup = () => {
         phone: ''
     });
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState('');
     const { register } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -22,9 +22,10 @@ const Signup = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setSuccess('');
         try {
-            await register(formData);
-            navigate('/dashboard');
+            const data = await register(formData);
+            setSuccess(data.message);
         } catch (err) {
             const msg = err.response?.data?.message || 'Registration failed.';
             setError(msg);
@@ -51,94 +52,120 @@ const Signup = () => {
 
                     {error && <div style={{ background: '#FEE2E2', color: '#B91C1C', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{error}</div>}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label className="form-label">Full Name</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Phone Number</label>
-                            <input
-                                type="tel"
-                                className="form-input"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                placeholder="+1 (555) 000-0000"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Email Address</label>
-                            <input
-                                type="email"
-                                className="form-input"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div className="form-group">
-                                <label className="form-label">Age</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    value={formData.age}
-                                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                                />
+                    {success ? (
+                        <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                            <div style={{ 
+                                width: '80px', 
+                                height: '80px', 
+                                background: '#DCFCE7', 
+                                color: '#166534', 
+                                borderRadius: '50%', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                fontSize: '2.5rem',
+                                margin: '0 auto 1.5rem'
+                            }}>
+                                ✓
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Gender</label>
-                                <select
-                                    className="form-input"
-                                    value={formData.gender}
-                                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            <h3 style={{ color: '#1e293b', marginBottom: '1rem' }}>Check Your Email</h3>
+                            <p style={{ color: '#64748b', lineHeight: '1.6' }}>{success}</p>
+                            <Link to="/login" className="btn btn-primary" style={{ marginTop: '2rem', display: 'inline-block', width: '100%' }}>
+                                Go to Login
+                            </Link>
+                        </div>
+                    ) : (
+                        <>
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label className="form-label">Full Name</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        className="form-input"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        placeholder="+1 (555) 000-0000"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Email Address</label>
+                                    <input
+                                        type="email"
+                                        className="form-input"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Age</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            value={formData.age}
+                                            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Gender</label>
+                                        <select
+                                            className="form-input"
+                                            value={formData.gender}
+                                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                        >
+                                            <option>Male</option>
+                                            <option>Female</option>
+                                            <option>Other</option>
+                                            <option>Prefer not to say</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                                    disabled={loading}
                                 >
-                                    <option>Male</option>
-                                    <option>Female</option>
-                                    <option>Other</option>
-                                    <option>Prefer not to say</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            disabled={loading}
-                        >
-                            {loading && (
-                                <span style={{
-                                    border: '2px solid rgba(255,255,255,0.3)',
-                                    borderTop: '2px solid white',
-                                    borderRadius: '50%',
-                                    width: '16px',
-                                    height: '16px',
-                                    animation: 'spin 0.8s linear infinite',
-                                    display: 'inline-block'
-                                }}></span>
-                            )}
-                            {loading ? 'Creating Account...' : 'Get Started'}
-                        </button>
-                    </form>
-                    <p style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--text-light)' }}>
-                        Already have an account? <Link to="/login" style={{ color: 'var(--primary)' }}>Login</Link>
-                    </p>
+                                    {loading && (
+                                        <span style={{
+                                            border: '2px solid rgba(255,255,255,0.3)',
+                                            borderTop: '2px solid white',
+                                            borderRadius: '50%',
+                                            width: '16px',
+                                            height: '16px',
+                                            animation: 'spin 0.8s linear infinite',
+                                            display: 'inline-block'
+                                        }}></span>
+                                    )}
+                                    {loading ? 'Creating Account...' : 'Get Started'}
+                                </button>
+                            </form>
+                            <p style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--text-light)' }}>
+                                Already have an account? <Link to="/login" style={{ color: 'var(--primary)' }}>Login</Link>
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
