@@ -18,7 +18,6 @@ import MedicationTracker from './pages/MedicationTracker';
 import Appointments from './pages/Appointments';
 import BookAppointment from './pages/BookAppointment';
 import AIChat from './pages/AIChat';
-import VerifyEmail from './pages/VerifyEmail';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 
@@ -43,7 +42,6 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/verify-email/:token" element={<VerifyEmail />} />
               <Route
                 path="/dashboard"
                 element={

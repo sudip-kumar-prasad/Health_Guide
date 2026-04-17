@@ -24,7 +24,7 @@ const toLeanUser = (user, token) => ({
     token: token || undefined
 });
 
-const { sendVerificationEmail } = require('../utils/emailService');
+const { sendOTPEmail } = require('../utils/emailService');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -44,8 +44,9 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
     // Create user
     try {
@@ -56,15 +57,17 @@ const registerUser = async (req, res) => {
             age,
             gender,
             phone,
-            verificationToken
+            otp,
+            otpExpires
         });
 
         if (user) {
-            // Send verification email
-            await sendVerificationEmail(user.email, user.name, verificationToken);
+            // Send OTP email
+            await sendOTPEmail(user.email, user.name, otp);
             
             res.status(201).json({
-                message: 'Registration successful! Please check your email to verify your account.'
+                message: 'OTP sent to your email. Please verify to complete registration.',
+                email: user.email // Return email so frontend knows which user to verify
             });
         }
     } catch (error) {
@@ -272,7 +275,8 @@ const googleLogin = async (req, res) => {
                     name,
                     email,
                     profileImage: picture,
-                    role: 'user'
+                    role: 'user',
+                    isVerified: true // Google users are already verified
                 }
             },
             { upsert: true, new: true, runValidators: false }
@@ -291,22 +295,59 @@ const googleLogin = async (req, res) => {
     }
 };
 
-// @desc    Verify email token
-// @route   GET /api/auth/verify-email/:token
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
 // @access  Public
-const verifyEmail = async (req, res) => {
+const verifyOTP = async (req, res) => {
     try {
-        const user = await User.findOne({ verificationToken: req.params.token });
+        const { email, otp } = req.body;
+        const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired verification token' });
+            return res.status(400).json({ message: 'User not found' });
+        }
+
+        if (user.otp !== otp || user.otpExpires < Date.now()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
         user.isVerified = true;
-        user.verificationToken = undefined;
+        user.otp = undefined;
+        user.otpExpires = undefined;
         await user.save();
 
-        res.json({ message: 'Email verified successfully! You can now log in.' });
+        // Automatically log them in by returning the token
+        res.json(toLeanUser(user, generateToken(user._id)));
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// @desc    Resend OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+const resendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: 'Email is already verified' });
+        }
+
+        // Generate new OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.otp = otp;
+        user.otpExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        await sendOTPEmail(user.email, user.name, otp);
+
+        res.json({ message: 'New OTP sent to your email' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -321,5 +362,6 @@ module.exports = {
     forgotPassword,
     resetPassword,
     googleLogin,
-    verifyEmail,
+    verifyOTP,
+    resendOTP,
 };

@@ -44,7 +44,19 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (userData) => {
         const { data } = await axios.post(`${API_URL}/api/auth/register`, userData);
-        return data; // Return the message about email verification
+        return data; // Return the message and email about OTP verification
+    };
+
+    const verifyOTP = async (email, otp) => {
+        const { data } = await axios.post(`${API_URL}/api/auth/verify-otp`, { email, otp });
+        localStorage.setItem('token', data.token);
+        setUser(data);
+        return data;
+    };
+
+    const resendOTP = async (email) => {
+        const { data } = await axios.post(`${API_URL}/api/auth/resend-otp`, { email });
+        return data;
     };
 
     const logout = () => {
@@ -78,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, updateUserProfile, changePassword, googleLogin, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, updateUserProfile, changePassword, googleLogin, verifyOTP, resendOTP, loading }}>
             {children}
         </AuthContext.Provider>
     );

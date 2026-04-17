@@ -13,9 +13,12 @@ const Signup = () => {
         gender: 'Prefer not to say',
         phone: ''
     });
-    const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const { register } = useContext(AuthContext);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [registeredEmail, setRegisteredEmail] = useState('');
+    const { register, verifyOTP, resendOTP } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -26,8 +29,38 @@ const Signup = () => {
         try {
             const data = await register(formData);
             setSuccess(data.message);
+            setRegisteredEmail(data.email || formData.email);
         } catch (err) {
             const msg = err.response?.data?.message || 'Registration failed.';
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOTP = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            await verifyOTP(registeredEmail, otp);
+            navigate('/dashboard');
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Verification failed. Invalid or expired OTP.';
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOTP = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const data = await resendOTP(registeredEmail);
+            setSuccess(data.message);
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Failed to resend OTP.';
             setError(msg);
         } finally {
             setLoading(false);
@@ -53,26 +86,65 @@ const Signup = () => {
                     {error && <div style={{ background: '#FEE2E2', color: '#B91C1C', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{error}</div>}
 
                     {success ? (
-                        <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                             <div style={{ 
-                                width: '80px', 
-                                height: '80px', 
+                                width: '60px', 
+                                height: '60px', 
                                 background: '#DCFCE7', 
                                 color: '#166534', 
                                 borderRadius: '50%', 
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 justifyContent: 'center', 
-                                fontSize: '2.5rem',
+                                fontSize: '2rem',
                                 margin: '0 auto 1.5rem'
                             }}>
-                                ✓
+                                ✉️
                             </div>
-                            <h3 style={{ color: '#1e293b', marginBottom: '1rem' }}>Check Your Email</h3>
-                            <p style={{ color: '#64748b', lineHeight: '1.6' }}>{success}</p>
-                            <Link to="/login" className="btn btn-primary" style={{ marginTop: '2rem', display: 'inline-block', width: '100%' }}>
-                                Go to Login
-                            </Link>
+                            <h3 style={{ color: '#1e293b', marginBottom: '1rem' }}>Verify Your Email</h3>
+                            <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '2rem' }}>{success}</p>
+                            
+                            <form onSubmit={handleVerifyOTP}>
+                                <div className="form-group">
+                                    <label className="form-label" style={{ textAlign: 'left' }}>Enter 6-Digit Code</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="123456"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        maxLength={6}
+                                        style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', fontWeight: 'bold' }}
+                                        required
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    style={{ width: '100%', marginTop: '1rem' }}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Verifying...' : 'Verify & Login'}
+                                </button>
+                            </form>
+                            
+                            <p style={{ marginTop: '1.5rem', color: 'var(--text-light)', fontSize: '0.9rem' }}>
+                                Didn't receive the code?{' '}
+                                <button 
+                                    onClick={handleResendOTP}
+                                    style={{ 
+                                        background: 'none', 
+                                        border: 'none', 
+                                        color: 'var(--primary)', 
+                                        cursor: 'pointer', 
+                                        fontWeight: '600',
+                                        padding: 0
+                                    }}
+                                    disabled={loading}
+                                >
+                                    Resend OTP
+                                </button>
+                            </p>
                         </div>
                     ) : (
                         <>
