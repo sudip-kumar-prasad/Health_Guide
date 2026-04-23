@@ -4,6 +4,11 @@ import { FaPills, FaPlus, FaTrash, FaCheckCircle, FaClock, FaExclamationCircle, 
 import { toast } from 'react-toastify';
 import { API_URL } from '../config';
 import Tesseract from 'tesseract.js';
+import * as pdfjs from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Configure PDF.js worker using Vite's URL import
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const MedicationTracker = () => {
     // State references for our data
@@ -46,29 +51,90 @@ const MedicationTracker = () => {
         if (!file) return;
 
         setIsScanning(true);
-        const toastId = toast.loading('AI is reading your prescription...');
+        const toastId = toast.loading('Initializing scanner...');
+        let imageURL = '';
 
         try {
-            const result = await Tesseract.recognize(file, 'eng', {
-                logger: (m) => console.log(m)
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            if (file.type === 'application/pdf') {
+                toast.update(toastId, { render: 'Converting PDF (High Res)...' });
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+                const page = await pdf.getPage(1);
+                
+                const viewport = page.getViewport({ scale: 3.0 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport }).promise;
+            } else if (file.type.startsWith('image/')) {
+                toast.update(toastId, { render: 'Normalizing image...' });
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.src = objectUrl;
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+                
+                // Use a high-quality resize if the image is small
+                const scale = Math.max(1, 2000 / Math.max(img.width, img.height));
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(objectUrl);
+            } else {
+                toast.update(toastId, { render: 'Unsupported file type.', type: 'error', isLoading: false, autoClose: 3000 });
+                setIsScanning(false);
+                return;
+            }
+
+            // Convert normalized canvas to Blob
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            imageURL = URL.createObjectURL(blob);
+            console.log('Image normalization complete');
+
+            toast.update(toastId, { render: 'AI is analyzing text structure...' });
+            const result = await Tesseract.recognize(imageURL, 'eng', {
+                logger: (m) => {
+                    if (m.status === 'recognizing text') {
+                        const progress = Math.round(m.progress * 100);
+                        toast.update(toastId, { render: `AI Reading: ${progress}%` });
+                    }
+                }
             });
 
             const text = result.data.text;
-            console.log('OCR Text:', text);
-
-            // Simple AI Logic to extract name and dosage
-            // In a real app, you'd send this text to an LLM like Gemini
-            // For now, let's use some regex patterns
+            console.log('Raw OCR Text:', text);
             
-            // Look for common dosage patterns (e.g., 500mg, 10mg)
-            const dosageMatch = text.match(/(\d+\s*(mg|mcg|ml|g))/i);
-            const dosage = dosageMatch ? dosageMatch[0] : '';
+            if (!text || text.trim().length < 5) {
+                throw new Error('AI could not find any readable text. Please try a clearer scan.');
+            }
 
-            // Try to find medication name (usually first or second line, or near dosage)
-            const lines = text.split('\n').filter(l => l.trim().length > 3);
+            // Improved Parsing Logic
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+            
+            // 1. Look for Dosage (e.g., 500 mg, 10ml, 5mcg)
+            const dosageRegex = /(\d+\s*(mg|mcg|ml|g|tab|cap))/i;
+            let dosage = '';
             let name = '';
-            if (lines.length > 0) {
-                // Heuristic: The name is often on its own line or before the dosage
+
+            for (let line of lines) {
+                const match = line.match(dosageRegex);
+                if (match) {
+                    dosage = match[0];
+                    // If we found dosage, the name is likely the same line or line before
+                    if (line.length > dosage.length + 3) {
+                        name = line.replace(dosage, '').replace(/[^a-zA-Z\s]/g, '').trim();
+                    }
+                    break;
+                }
+            }
+
+            // Fallback for name if first line is better
+            if (!name && lines.length > 0) {
                 name = lines[0].replace(/[^a-zA-Z\s]/g, '').trim();
             }
 
@@ -76,25 +142,28 @@ const MedicationTracker = () => {
                 ...prev,
                 name: name || prev.name,
                 dosage: dosage || prev.dosage,
-                instructions: 'Extracted from image. Please verify.'
+                instructions: 'Verified by AI Scan. Please review carefully.'
             }));
 
             toast.update(toastId, { 
-                render: 'Prescription scanned! Please verify the details.', 
+                render: 'Successfully scanned! Please verify the details.', 
                 type: 'success', 
                 isLoading: false, 
-                autoClose: 5000 
+                autoClose: 3000 
             });
         } catch (error) {
-            console.error('OCR Error:', error);
+            console.error('Scan Error:', error);
             toast.update(toastId, { 
-                render: 'Failed to read prescription. Try again or enter manually.', 
+                render: error.message || 'Failed to scan. Try a clearer image.', 
                 type: 'error', 
                 isLoading: false, 
-                autoClose: 5000 
+                autoClose: 4000 
             });
         } finally {
             setIsScanning(false);
+            if (imageURL.startsWith('blob:')) {
+                URL.revokeObjectURL(imageURL);
+            }
         }
     };
 
@@ -288,7 +357,7 @@ const MedicationTracker = () => {
                         <div style={{ position: 'relative' }}>
                             <input 
                                 type="file" 
-                                accept="image/*" 
+                                accept="image/*,application/pdf" 
                                 onChange={handleScanPrescription} 
                                 style={{ display: 'none' }} 
                                 id="prescription-upload" 
