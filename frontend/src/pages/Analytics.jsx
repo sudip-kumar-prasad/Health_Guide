@@ -6,12 +6,15 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
 import { toast } from 'react-toastify';
-import { FaChartBar, FaChartPie, FaChartLine, FaHeartbeat, FaExclamationTriangle, FaCheckCircle, FaStethoscope, FaUserMd } from 'react-icons/fa';
+import { FaChartBar, FaChartPie, FaChartLine, FaHeartbeat, FaExclamationTriangle, FaCheckCircle, FaStethoscope, FaUserMd, FaFilePdf, FaDownload } from 'react-icons/fa';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Analytics = () => {
-    // State to hold our data from server
+    // ... (state and fetch remains same)
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
         fetchAnalytics();
@@ -31,6 +34,114 @@ const Analytics = () => {
             toast.error('Failed to fetch analytics');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const generatePDFReport = async () => {
+        setIsGenerating(true);
+        try {
+            const token = localStorage.getItem('token');
+            const headers = { Authorization: 'Bearer ' + token };
+
+            // Fetch extra data for a comprehensive report
+            const [medsRes, apptsRes, userRes] = await Promise.all([
+                axios.get(`${API_URL}/api/medications`, { headers }),
+                axios.get(`${API_URL}/api/appointments`, { headers }),
+                axios.get(`${API_URL}/api/auth/me`, { headers })
+            ]);
+
+            const doc = new jsPDF();
+            const user = userRes.data;
+
+            // --- PDF Styles & Header ---
+            doc.setFontSize(22);
+            doc.setTextColor(30, 41, 59);
+            doc.text('VitallQ Health Report', 14, 22);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+            doc.line(14, 32, 196, 32);
+
+            // --- Patient Information ---
+            doc.setFontSize(14);
+            doc.setTextColor(30, 41, 59);
+            doc.text('Patient Information', 14, 42);
+            
+            doc.setFontSize(10);
+            const userInfo = [
+                ['Name', user.name || 'N/A'],
+                ['Email', user.email || 'N/A'],
+                ['Age', user.age || 'N/A'],
+                ['Gender', user.gender || 'N/A'],
+                ['Phone', user.phone || 'N/A']
+            ];
+
+            autoTable(doc, {
+                startY: 46,
+                head: [['Field', 'Details']],
+                body: userInfo,
+                theme: 'striped',
+                headStyles: { fillColor: [59, 130, 246] }
+            });
+
+            // --- Symptom Summary ---
+            let currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 70) + 15;
+            doc.setFontSize(14);
+            doc.text('Recent Symptom Checks', 14, currentY);
+            
+            const symptomRows = (analytics.recentRecords || []).map(rec => [
+                new Date(rec.createdAt).toLocaleDateString(),
+                (rec.symptoms || []).join(', '),
+                rec.analysisResult?.conditions?.[0]?.name || 'N/A',
+                rec.severity || 'N/A'
+            ]);
+
+            autoTable(doc, {
+                startY: currentY + 4,
+                head: [['Date', 'Symptoms', 'Potential Condition', 'Severity']],
+                body: symptomRows.length > 0 ? symptomRows : [['No history found', '', '', '']],
+                theme: 'grid',
+                headStyles: { fillColor: [16, 185, 129] }
+            });
+
+            // --- Medications ---
+            currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY + 40) + 15;
+            doc.setFontSize(14);
+            doc.text('Current Medications', 14, currentY);
+            
+            const medRows = (medsRes.data || []).map(m => [
+                m.name,
+                m.dosage,
+                m.frequency,
+                m.instructions || 'N/A'
+            ]);
+
+            autoTable(doc, {
+                startY: currentY + 4,
+                head: [['Medicine', 'Dosage', 'Frequency', 'Instructions']],
+                body: medRows.length > 0 ? medRows : [['No active medications found', '', '', '']],
+                theme: 'striped',
+                headStyles: { fillColor: [99, 102, 241] }
+            });
+
+            // --- Footer ---
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.text('VitallQ - Your Personal Health Assistant | Informational Use Only', 14, 285);
+                doc.text(`Page ${i} of ${pageCount}`, 180, 285);
+            }
+
+            console.log('Saving PDF...');
+            doc.save(`VitallQ_Health_Report_${user.name.replace(/\s+/g, '_')}.pdf`);
+            toast.success('Health report generated successfully!');
+        } catch (error) {
+            console.error('PDF Generation error:', error);
+            toast.error('Failed to generate health report');
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -198,9 +309,40 @@ const Analytics = () => {
         <div className="container" style={{ padding: '2rem 1rem', maxWidth: '1200px' }}>
             <div className="animate-fade-in">
                 {/* Header */}
-                <div style={{ marginBottom: '2.5rem', paddingLeft: '0.5rem' }}>
-                    <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#1E293B', marginBottom: '0.5rem', letterSpacing: '-0.025em' }}>Analytics Dashboard</h1>
-                    <p style={{ fontSize: '1.1rem', color: '#64748B' }}>Overview of your health metrics and symptom history</p>
+                <div style={{ marginBottom: '2.5rem', paddingLeft: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#1E293B', marginBottom: '0.5rem', letterSpacing: '-0.025em' }}>Analytics Dashboard</h1>
+                        <p style={{ fontSize: '1.1rem', color: '#64748B' }}>Overview of your health metrics and symptom history</p>
+                    </div>
+                    <button 
+                        onClick={generatePDFReport}
+                        disabled={isGenerating}
+                        className="btn btn-primary"
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.75rem', 
+                            padding: '0.8rem 1.5rem',
+                            borderRadius: '0.75rem',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            background: 'var(--primary)',
+                            boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)',
+                            border: 'none',
+                            color: 'white',
+                            cursor: isGenerating ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {isGenerating ? (
+                            <>Generating...</>
+                        ) : (
+                            <>
+                                <FaFilePdf size={18} />
+                                Download Health Report
+                            </>
+                        )}
+                    </button>
                 </div>
 
                 {/* Summary Metrics */}
@@ -271,7 +413,7 @@ const Analytics = () => {
                                     <FaChartLine style={{ color: '#6366F1' }} /> Activity Trends
                                 </h3>
                             </div>
-                            <div style={{ height: '320px' }}>
+                            <div style={{ height: '320px', width: '100%', minWidth: 0 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={trendData}>
                                         <defs>
@@ -299,7 +441,7 @@ const Analytics = () => {
                             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1E293B', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <FaChartBar style={{ color: '#3B82F6' }} /> Common Symptoms
                             </h3>
-                            <div style={{ height: '300px' }}>
+                            <div style={{ height: '300px', width: '100%', minWidth: 0 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={symptomData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
@@ -319,7 +461,7 @@ const Analytics = () => {
                             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1E293B', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <FaChartPie style={{ color: '#10B981' }} /> Severity Ratio
                             </h3>
-                            <div style={{ height: '300px' }}>
+                            <div style={{ height: '300px', width: '100%', minWidth: 0 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie

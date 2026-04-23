@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaPills, FaPlus, FaTrash, FaCheckCircle, FaClock, FaExclamationCircle, FaToggleOn, FaToggleOff, FaTimes } from 'react-icons/fa';
+import { FaPills, FaPlus, FaTrash, FaCheckCircle, FaClock, FaExclamationCircle, FaToggleOn, FaToggleOff, FaTimes, FaCamera, FaRobot } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { API_URL } from '../config';
-// Removed unused import: format
+import Tesseract from 'tesseract.js';
 
 const MedicationTracker = () => {
     // State references for our data
     const [medications, setMedications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
 
     // State for the new medication form
     const [newMed, setNewMed] = useState({
@@ -38,6 +39,63 @@ const MedicationTracker = () => {
 
     const removeTime = (time) => {
         setNewMed({ ...newMed, timeOfDay: newMed.timeOfDay.filter(t => t !== time) });
+    };
+
+    const handleScanPrescription = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsScanning(true);
+        const toastId = toast.loading('AI is reading your prescription...');
+
+        try {
+            const result = await Tesseract.recognize(file, 'eng', {
+                logger: (m) => console.log(m)
+            });
+
+            const text = result.data.text;
+            console.log('OCR Text:', text);
+
+            // Simple AI Logic to extract name and dosage
+            // In a real app, you'd send this text to an LLM like Gemini
+            // For now, let's use some regex patterns
+            
+            // Look for common dosage patterns (e.g., 500mg, 10mg)
+            const dosageMatch = text.match(/(\d+\s*(mg|mcg|ml|g))/i);
+            const dosage = dosageMatch ? dosageMatch[0] : '';
+
+            // Try to find medication name (usually first or second line, or near dosage)
+            const lines = text.split('\n').filter(l => l.trim().length > 3);
+            let name = '';
+            if (lines.length > 0) {
+                // Heuristic: The name is often on its own line or before the dosage
+                name = lines[0].replace(/[^a-zA-Z\s]/g, '').trim();
+            }
+
+            setNewMed(prev => ({
+                ...prev,
+                name: name || prev.name,
+                dosage: dosage || prev.dosage,
+                instructions: 'Extracted from image. Please verify.'
+            }));
+
+            toast.update(toastId, { 
+                render: 'Prescription scanned! Please verify the details.', 
+                type: 'success', 
+                isLoading: false, 
+                autoClose: 5000 
+            });
+        } catch (error) {
+            console.error('OCR Error:', error);
+            toast.update(toastId, { 
+                render: 'Failed to read prescription. Try again or enter manually.', 
+                type: 'error', 
+                isLoading: false, 
+                autoClose: 5000 
+            });
+        } finally {
+            setIsScanning(false);
+        }
     };
 
     // Function to get data from server
@@ -224,7 +282,41 @@ const MedicationTracker = () => {
             {/* Add Form Section */}
             {showAddForm && (
                 <div className="glass-panel animate-fade-in" style={{ padding: '2.5rem', marginBottom: '3rem', borderRadius: '1.5rem' }}>
-                    <h3 style={{ marginBottom: '2rem', fontSize: '1.5rem', color: 'var(--text-main)' }}>Add New Medication</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-main)' }}>Add New Medication</h3>
+                        
+                        <div style={{ position: 'relative' }}>
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleScanPrescription} 
+                                style={{ display: 'none' }} 
+                                id="prescription-upload" 
+                                disabled={isScanning}
+                            />
+                            <label 
+                                htmlFor="prescription-upload"
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.5rem', 
+                                    padding: '0.6rem 1.2rem', 
+                                    background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)', 
+                                    color: 'white', 
+                                    borderRadius: '2rem', 
+                                    fontSize: '0.85rem', 
+                                    fontWeight: '600', 
+                                    cursor: isScanning ? 'not-allowed' : 'pointer',
+                                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+                                    opacity: isScanning ? 0.7 : 1
+                                }}
+                            >
+                                {isScanning ? <FaRobot className="animate-spin" /> : <FaCamera />}
+                                {isScanning ? 'Scanning...' : 'AI Prescription Scan'}
+                            </label>
+                        </div>
+                    </div>
+                    
                     <form onSubmit={handleAddMedication}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
                             <div className="form-group" style={{ marginBottom: 0 }}>
